@@ -1,9 +1,14 @@
 import os
 import logger
-logger.configure('logs/chengdu')
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
+
+try:
+    import matplotlib.pyplot as plt
+except ImportError:
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
 
 from utils import Coordination
 from datetime import datetime
@@ -18,6 +23,7 @@ AIRPORT = SHUANGLIU
 
 class Taxi(object):
     def __init__(self, df):
+        df = df.sort_values(by='time')
         date_time = [str2time(time) for time in df.time.values]
         self.id = df.id[df.index[0]]
         self.trajs = [0]
@@ -54,12 +60,12 @@ class Taxi(object):
                         self.states.append('->')
                     self.trajs.append(len(self.customer) - 1)
 
-        for i in range(1, len(self.trajs)):
-            coos = self.coo[self.trajs[i - 1]:self.trajs[i]]
-            if self.customer[self.trajs[i - 1]] > 0:
-                plt.plot([c.longitude for c in coos], [c.latitude for c in coos], alpha=0.6)
-            else:
-                plt.plot([c.longitude for c in coos], [c.latitude for c in coos], alpha=0.2)
+        # for i in range(1, len(self.trajs)):
+        #     coos = self.coo[self.trajs[i - 1]:self.trajs[i]]
+        #     if self.customer[self.trajs[i - 1]] > 0:
+        #         plt.plot([c.longitude for c in coos], [c.latitude for c in coos], alpha=0.6)
+        #     else:
+        #         plt.plot([c.longitude for c in coos], [c.latitude for c in coos], alpha=0.2)
 
         for i in range(len(self.trajs)):
             j = self.trajs[i]
@@ -90,7 +96,7 @@ def preprocess_df(df):
         1: 'latitude',
         2: 'longitude',
         3: 'customer',
-        4: 'time',
+        4: 'datetime',
     })
 
 
@@ -102,11 +108,15 @@ def draw_Shuangliu():
     plt.gcf().gca().add_artist(c2)
     plt.legend()
     plt.grid(linestyle='--')
-    plt.show()
+    try:
+        plt.show()
+    except:
+        plt.savefig('logs/chengdu/shuangliu.jpg')
     plt.cla()
 
 
 def main():
+    logger.configure('logs/chengdu')
     T = []
     for root, dirs, files in os.walk('data/Speed_Prediction'):
         for csv in files:
@@ -116,7 +126,7 @@ def main():
                 for _, df_ in df.groupby('id'):
                     Taxi(df_)
 
-    draw_Shuangliu()
+    # draw_Shuangliu()
 
     logger.info('# long distance from Shuangliu:', np.sum([t.longs for t in T]))
     logger.info('# short distance from Shuangliu:', np.sum([t.shorts for t in T]))

@@ -1,9 +1,14 @@
 import os
 import logger
-logger.configure('logs/shanghai')
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
+
+try:
+    import matplotlib.pyplot as plt
+except ImportError:
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
 
 from utils import Coordination
 from datetime import datetime
@@ -20,6 +25,10 @@ AIRPORT = HONGQIAO1, HONGQIAO2
 
 def in_airport(coo):
     return coo.near(AIRPORT[0], IN) or coo.near(AIRPORT[1], IN)
+
+
+def near_airport(coo):
+    return coo.near(AIRPORT[0], IN) or coo.near(AIRPORT[1], NEAR)
 
 
 class Taxi(object):
@@ -54,7 +63,7 @@ class Taxi(object):
                     elif self.coo[self.trajs[-1]].near(AIRPORT[0], IN) or self.coo[self.trajs[-1]].near(AIRPORT[1], IN):
                         if self.coo[-1].near(AIRPORT[0], NEAR) or self.coo[-1].near(AIRPORT[1], NEAR):
                             self.states.append('airport->short')
-                        elif not (self.coo[-1].near(AIRPORT[0], NEAR) or self.coo[-1].near(AIRPORT[1], IN)):
+                        elif not (self.coo[-1].near(AIRPORT[0], NEAR) or self.coo[-1].near(AIRPORT[1], NEAR)):
                             self.states.append('airport->long')
                     elif self.coo[-1].near(AIRPORT[0], IN) or self.coo[-1].near(AIRPORT[1], IN):
                         self.states.append('->airport')
@@ -62,12 +71,12 @@ class Taxi(object):
                         self.states.append('->')
                     self.trajs.append(len(self.customer) - 1)
 
-        for i in range(1, len(self.trajs)):
-            coos = self.coo[self.trajs[i - 1]:self.trajs[i]]
-            if self.customer[self.trajs[i - 1]] > 0:
-                plt.plot([c.longitude for c in coos], [c.latitude for c in coos], alpha=0.6)
-            else:
-                plt.plot([c.longitude for c in coos], [c.latitude for c in coos], alpha=0.2)
+        # for i in range(1, len(self.trajs)):
+        #     coos = self.coo[self.trajs[i - 1]:self.trajs[i]]
+        #     if self.customer[self.trajs[i - 1]] > 0:
+        #         plt.plot([c.longitude for c in coos], [c.latitude for c in coos], alpha=0.6)
+        #     else:
+        #         plt.plot([c.longitude for c in coos], [c.latitude for c in coos], alpha=0.2)
 
         for i in range(len(self.trajs)):
             j = self.trajs[i]
@@ -95,7 +104,7 @@ class Taxi(object):
 def preprocess_df(df):
     return df.rename(columns={
         0: 'id',
-        1: 'time',
+        1: 'datetime',
         2: 'longitude',
         3: 'latitude',
         4: 'angle',
@@ -119,11 +128,15 @@ def draw_Hongqiao():
 
     plt.legend()
     plt.grid(linestyle='--')
-    plt.show()
+    try:
+        plt.show()
+    except:
+        plt.savefig('logs/shanghai/hongqiao.jpg')
     plt.cla()
 
 
 def main():
+    logger.configure('logs/shanghai')
     T = []
     for root, dirs, files in os.walk('data/Taxi_070220'):
         for csv in files[:5000]:
@@ -132,7 +145,7 @@ def main():
                 df = preprocess_df(df)
                 T.append(Taxi(df))
 
-    draw_Hongqiao()
+    # draw_Hongqiao()
 
     logger.info('# long distance from Hongqiao:', np.sum([t.longs for t in T]))
     logger.info('# short distance from Hongqiao:', np.sum([t.shorts for t in T]))
