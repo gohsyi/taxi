@@ -1,6 +1,17 @@
 import numpy as np
 
 
+
+def packing_time(mean=20, std=5, low=0, high=40):
+    pt = np.ceil(np.random.normal(mean, std))
+    if pt < low:
+        return low
+    elif pt > high:
+        return high
+    else:
+        return pt
+
+
 class Coordination(object):
     def __init__(self, latitude, longitude):
         self.latitude = latitude
