@@ -127,6 +127,7 @@ def main():
     logger.record_tabular('distance mean (night)', np.mean([i for i in range(len(night)) for j in range(night[i])]))
     logger.record_tabular('distance std (night)', np.std([i for i in range(len(night)) for j in range(night[i])]))
     logger.dump_tabular()
+    logger.info([day[i] + night[i] for i in range(len(day))])
 
     plt.bar(np.arange(51)-WIDTH/2, day, width=WIDTH, color='C1', label='day')
     plt.bar(np.arange(51)+WIDTH/2, night, width=WIDTH, color='C0', label='night')
